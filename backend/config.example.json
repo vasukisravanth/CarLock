@@ -1,0 +1,14 @@
+{
+  "port": "8080",
+  "database": {
+    "host": "localhost",
+    "port": "5432",
+    "user": "postgres",
+    "password": "password",
+    "name": "carlock"
+  },
+  "mongodb": {
+    "uri": "mongodb://localhost:27017",
+    "db_name": "carlock"
+  }
+}
