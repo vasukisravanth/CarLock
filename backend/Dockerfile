@@ -6,6 +6,14 @@ WORKDIR /app
 # (some platforms set build context to repo root while using a Dockerfile in a subdir).
 COPY . .
 
+# Ensure the backend config file is available at a predictable path for runtime.
+RUN set -eux; \
+    if [ -f ./config.json ]; then \
+        cp ./config.json /app/config.json; \
+    elif [ -f ./car-lock-system/backend/config.json ]; then \
+        cp ./car-lock-system/backend/config.json /app/config.json; \
+    fi
+
 # Detect where go.mod is (repo root vs backend subdir), install modules
 # and build a single static binary at /app/carlock so this Dockerfile works
 # whether the build context is the repo root or the `backend/` folder.
@@ -45,6 +53,8 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /app/carlock .
+COPY --from=builder /app/config.json .
+ENV CONFIG_PATH=/root/config.json
 
 EXPOSE 8080
 
