@@ -15,16 +15,27 @@ RUN set -eux; \
 	MODFILE=$(go env GOMOD); \
 	if [ -n "$MODFILE" ] && [ -f "$MODFILE" ]; then \
 		MODDIR=$(dirname "$MODFILE"); \
-	elif [ -f ./go.mod ]; then \
-		MODDIR=.; \
-	elif [ -f ./car-lock-system/backend/go.mod ]; then \
-		MODDIR=car-lock-system/backend; \
 	else \
-		echo "go.mod not found in context"; exit 1; \
+		# check common locations relative to the build context
+		for d in . backend car-lock-system/backend; do \
+			if [ -f "$d/go.mod" ]; then MODDIR=$d; break; fi; \
+		done; \
 	fi; \
+	if [ -z "$MODDIR" ]; then echo "go.mod not found in context"; exit 1; fi; \
 	cd "$MODDIR"; \
+	echo "Using module dir: $MODDIR"; ls -la; \
 	go mod download; \
-	go build -ldflags='-s -w' -o /app/carlock ./cmd/carlock
+	# determine build path for cmd/carlock relative to module dir
+	if [ -d ./cmd/carlock ]; then \
+		BUILD_TARGET=./cmd/carlock; \
+	elif [ -d ./car-lock-system/backend/cmd/carlock ]; then \
+		BUILD_TARGET=./car-lock-system/backend/cmd/carlock; \
+	elif [ -d ../backend/cmd/carlock ]; then \
+		BUILD_TARGET=../backend/cmd/carlock; \
+	else \
+		echo "cmd/carlock not found relative to module dir ($MODDIR)"; exit 1; \
+	fi; \
+	go build -ldflags='-s -w' -o /app/carlock "$BUILD_TARGET"
 
 FROM alpine:latest
 
