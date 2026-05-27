@@ -11,9 +11,17 @@ COPY . .
 # whether the build context is the repo root or the `backend/` folder.
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN set -eux; \
-	if [ -f go.mod ]; then MODDIR=.; \
-	elif [ -f car-lock-system/backend/go.mod ]; then MODDIR=car-lock-system/backend; \
-	else echo "go.mod not found in context"; exit 1; fi; \
+	# Use `go env GOMOD` to reliably locate the go.mod file inside the copied context
+	MODFILE=$(go env GOMOD); \
+	if [ -n "$MODFILE" ] && [ -f "$MODFILE" ]; then \
+		MODDIR=$(dirname "$MODFILE"); \
+	elif [ -f ./go.mod ]; then \
+		MODDIR=.; \
+	elif [ -f ./car-lock-system/backend/go.mod ]; then \
+		MODDIR=car-lock-system/backend; \
+	else \
+		echo "go.mod not found in context"; exit 1; \
+	fi; \
 	cd "$MODDIR"; \
 	go mod download; \
 	go build -ldflags='-s -w' -o /app/carlock ./cmd/carlock
