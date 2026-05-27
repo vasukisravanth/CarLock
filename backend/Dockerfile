@@ -10,8 +10,12 @@ COPY . .
 RUN set -eux; \
     if [ -f ./config.json ]; then \
         cp ./config.json /app/config.json; \
+    elif [ -f ./config.example.json ]; then \
+        cp ./config.example.json /app/config.json; \
     elif [ -f ./car-lock-system/backend/config.json ]; then \
         cp ./car-lock-system/backend/config.json /app/config.json; \
+    elif [ -f ./car-lock-system/backend/config.example.json ]; then \
+        cp ./car-lock-system/backend/config.example.json /app/config.json; \
     fi
 
 # Detect where go.mod is (repo root vs backend subdir), install modules
