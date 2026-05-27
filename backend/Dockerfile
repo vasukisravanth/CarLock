@@ -2,10 +2,10 @@ FROM golang:1.20 AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
-
+# Copy entire context so Docker builds work when the build context is repository root
+# (some platforms set build context to repo root while using a Dockerfile in a subdir).
 COPY . .
+RUN go mod download
 
 # Build a fully static linux binary suitable for small runtime images
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
